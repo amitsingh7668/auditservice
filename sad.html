@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Audit System Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            margin-bottom: 40px;
+            font-size: 14px;
+        }
+        
+        .architecture {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+        
+        .layer {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            position: relative;
+        }
+        
+        .component {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 200px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+            transition: transform 0.2s;
+        }
+        
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+        
+        .component-header {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #2d3748;
+            border-bottom: 2px solid #4299e1;
+            padding-bottom: 8px;
+        }
+        
+        .component-content {
+            font-size: 13px;
+            color: #4a5568;
+            line-height: 1.6;
+        }
+        
+        .component-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .component-content li {
+            padding: 4px 0;
+        }
+        
+        .component-content li:before {
+            content: "▹ ";
+            color: #4299e1;
+            font-weight: bold;
+        }
+        
+        /* Color coding for different components */
+        .frontend {
+            border-color: #48bb78;
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+        }
+        
+        .backend {
+            border-color: #4299e1;
+            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+        }
+        
+        .storage {
+            border-color: #ed8936;
+            background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
+        }
+        
+        .external {
+            border-color: #9f7aea;
+            background: linear-gradient(135deg, #faf5ff 0%, #e9d8fd 100%);
+        }
+        
+        /* Arrows */
+        .arrow {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .arrow-label {
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        
+        .vertical-arrow {
+            width: 3px;
+            background: #4299e1;
+            position: relative;
+        }
+        
+        .vertical-arrow:after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #4299e1;
+        }
+        
+        .horizontal-arrow {
+            height: 3px;
+            background: #48bb78;
+            position: relative;
+        }
+        
+        .horizontal-arrow:after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-left: 8px solid #48bb78;
+        }
+        
+        .bidirectional:before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            border-right: 8px solid #9f7aea;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #4a5568;
+        }
+        
+        .legend-box {
+            width: 30px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+        
+        .flow-diagram {
+            margin-top: 50px;
+            padding: 30px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .flow-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #4299e1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .step-number {
+            background: #4299e1;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+        
+        .step-description {
+            font-size: 13px;
+            color: #718096;
+        }
+        
+        @media (max-width: 1024px) {
+            .layer {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .component {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chat Audit System Architecture</h1>
+        <p class="subtitle">React Frontend + Java Quarkus Proxy + Hybrid Storage</p>
+        
+        <div class="architecture">
+            <!-- Frontend Layer -->
+            <div class="layer">
+                <div class="component frontend">
+                    <div class="component-header">React Application</div>
+                    <div class="component-content">
+                        <ul>
+                            <li>User Interface</li>
+                            <li>Chat Components</li>
+                            <li>SSE/Stream Handler</li>
+                            <li>Auth Token Management</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Backend Layer -->
+            <div class="layer">
+                <div class="component backend">
+                    <div class="component-header">Quarkus Proxy Gateway</div>
+                    <div class="component-content">
+                        <ul>
+                            <li>REST Endpoints (/api/chat)</li>
+                            <li>Request Validation</li>
+                            <li>Stream Handling</li>
+                            <li>Auth & Rate Limiting</li>
+                            <li>Async Event Publishing</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="component backend">
+                    <div class="component-header">Audit Service</div>
+                    <div class="component-content">
+                        <ul>
+                            <li>Event Consumer</li>
+                            <li>Data Transformation</li>
+                            <li>Blob Upload Logic</li>
+                            <li>Database Persistence</li>
+                            <li>Error Handling & Retry</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Message Queue Layer -->
+            <div class="layer">
+                <div class="component backend" style="border-color: #f6ad55; background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);">
+                    <div class="component-header">Message Queue</div>
+                    <div class="component-content">
+                        <ul>
+                            <li>Kafka / RabbitMQ</li>
+                            <li>Audit Events Topic</li>
+                            <li>Async Processing</li>
+                            <li>Guaranteed Delivery</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Storage Layer -->
+            <div class="layer">
+                <div class="component storage">
+                    <div class="component-header">PostgreSQL</div>
+                    <div class="component-content">
+                        <ul>
+                            <li>conversation_id</li>
+                            <li>session_id</li>
+                            <li>organization_id</li>
+                            <li>chatbot_id, model</li>
+                            <li>timestamp, token_count</li>
+                            <li>blob_reference</li>
+                            <li>metadata (JSONB)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="component storage">
+                    <div class="component-header">Azure Blob Storage</div>
+                    <div class="component-content">
+                        <ul>
+                            <li>Full Prompt Text</li>
+                            <li>Complete Response</li>
+                            <li>Conversation History</li>
+                            <li>Attachments/Files</li>
+                            <li>Organized by Date/Org</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- External Services Layer -->
+            <div class="layer">
+                <div class="component external">
+                    <div class="component-header">Third-Party Chat API</div>
+                    <div class="component-content">
+                        <ul>
+                            <li>OpenAI / Azure OpenAI</li>
+                            <li>Anthropic Claude</li>
+                            <li>Or Other LLM Provider</li>
+                            <li>Streaming Responses</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box frontend" style="border-color: #48bb78;"></div>
+                <span>Frontend</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box backend" style="border-color: #4299e1;"></div>
+                <span>Backend Services</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box storage" style="border-color: #ed8936;"></div>
+                <span>Storage</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box external" style="border-color: #9f7aea;"></div>
+                <span>External API</span>
+            </div>
+        </div>
+        
+        <!-- Data Flow Diagram -->
+        <div class="flow-diagram">
+            <div class="flow-title">Request Flow: User Question → Audit</div>
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-title">User sends chat message</div>
+                        <div class="step-description">React app captures user input with session context (org_id, user_id, chatbot_id)</div>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-title">POST request to Quarkus Gateway</div>
+                        <div class="step-description">React → POST /api/chat with { prompt, sessionId, organizationId, chatbotId, model }</div>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-title">Proxy forwards to Third-Party API</div>
+                        <div class="step-description">Quarkus adds API keys, forwards request to OpenAI/Claude/etc., establishes SSE stream</div>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-title">Stream response back to React</div>
+                        <div class="step-description">Quarkus pipes streaming response chunks back to frontend in real-time</div>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <div class="step-title">Publish audit event (async)</div>
+                        <div class="step-description">Quarkus publishes complete conversation to Kafka/RabbitMQ (non-blocking)</div>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <div class="step-title">Audit Service consumes event</div>
+                        <div class="step-description">Separate Quarkus consumer picks up audit event from message queue</div>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-number">7</div>
+                    <div class="step-content">
+                        <div class="step-title">Upload conversation to Azure Blob</div>
+                        <div class="step-description">Full prompt + response saved as JSON blob (e.g., chats/2024/01/29/session-abc-123.json)</div>
+                    </div>
+                </div>
+                
+                <div class="flow-step">
+                    <div class="step-number">8</div>
+                    <div class="step-content">
+                        <div class="step-title">Store metadata in PostgreSQL</div>
+                        <div class="step-description">Insert record with conversation_id, session_id, org_id, blob_reference, timestamps, token counts</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Database Schema -->
+        <div class="flow-diagram" style="margin-top: 30px;">
+            <div class="flow-title">PostgreSQL Schema: chat_audits Table</div>
+            <div style="background: white; padding: 20px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 13px; overflow-x: auto;">
+                <pre style="margin: 0; color: #2d3748;">
+CREATE TABLE chat_audits (
+    id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    conversation_id     UUID NOT NULL,
+    session_id          VARCHAR(255) NOT NULL,
+    question_id         VARCHAR(255),
+    organization_id     VARCHAR(255) NOT NULL,
+    user_id             VARCHAR(255),
+    chatbot_id          VARCHAR(255) NOT NULL,
+    model               VARCHAR(100) NOT NULL,
+    
+    -- Timestamps
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_at        TIMESTAMPTZ,
+    
+    -- Metrics
+    token_count_prompt  INTEGER,
+    token_count_response INTEGER,
+    latency_ms          INTEGER,
+    
+    -- Storage reference
+    blob_reference      TEXT NOT NULL,
+    blob_container      VARCHAR(255) DEFAULT 'chat-audits',
+    
+    -- Additional metadata
+    metadata            JSONB,
+    status              VARCHAR(50) DEFAULT 'completed',
+    error_message       TEXT,
+    
+    -- Indexes
+    CONSTRAINT fk_organization FOREIGN KEY (organization_id) 
+        REFERENCES organizations(id)
+);
+
+CREATE INDEX idx_session_timestamp ON chat_audits(session_id, created_at DESC);
+CREATE INDEX idx_org_timestamp ON chat_audits(organization_id, created_at DESC);
+CREATE INDEX idx_user_timestamp ON chat_audits(user_id, created_at DESC);
+CREATE INDEX idx_chatbot_model ON chat_audits(chatbot_id, model);
+CREATE INDEX idx_metadata_gin ON chat_audits USING gin(metadata);
+                </pre>
+            </div>
+        </div>
+        
+        <!-- Technology Stack -->
+        <div class="flow-diagram" style="margin-top: 30px;">
+            <div class="flow-title">Technology Stack</div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #48bb78;">
+                    <div style="font-weight: 600; color: #2d3748; margin-bottom: 10px;">Frontend</div>
+                    <div style="font-size: 13px; color: #4a5568;">
+                        • React 18+<br>
+                        • Axios / Fetch API<br>
+                        • EventSource for SSE<br>
+                        • React Query (optional)
+                    </div>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #4299e1;">
+                    <div style="font-weight: 600; color: #2d3748; margin-bottom: 10px;">Backend</div>
+                    <div style="font-size: 13px; color: #4a5568;">
+                        • Quarkus 3.x<br>
+                        • SmallRye Reactive Messaging<br>
+                        • Hibernate with Panache<br>
+                        • Azure SDK for Java
+                    </div>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #f6ad55;">
+                    <div style="font-weight: 600; color: #2d3748; margin-bottom: 10px;">Messaging</div>
+                    <div style="font-size: 13px; color: #4a5568;">
+                        • Apache Kafka (recommended)<br>
+                        • Or RabbitMQ<br>
+                        • Or Azure Service Bus<br>
+                        • Redis Streams (lightweight)
+                    </div>
+                </div>
+                
+                <div style="background: white; padding: 20px; border-radius: 6px; border-left: 4px solid #ed8936;">
+                    <div style="font-weight: 600; color: #2d3748; margin-bottom: 10px;">Storage</div>
+                    <div style="font-size: 13px; color: #4a5568;">
+                        • PostgreSQL 14+<br>
+                        • Azure Blob Storage<br>
+                        • Redis (caching)<br>
+                        • TimescaleDB (time-series)
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
